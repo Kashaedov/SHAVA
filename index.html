@@ -72,7 +72,7 @@
           <input type="text" id="venueComment" placeholder="Соус, мяско, атмосфера..." class="w-full bg-slate-950 border border-slate-800/80 p-3 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-amber-400/60" />
         </div>
 
-        <div id="formStatus" class="text-center font-bold text-xs"></div>
+        <div id="formStatus" class="text-center font-bold text-xs py-1"></div>
 
         <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-3.5 rounded-xl text-sm transition transform active:scale-[0.99] shadow-lg shadow-amber-500/20">
           Сохранить оценку в облако
@@ -286,15 +286,19 @@
         btn.textContent = 'Сохранить оценку в облако';
       } else {
         statusEl.className = "text-center font-bold text-xs text-emerald-400";
-        statusEl.textContent = 'Успешно сохранено!';
-        setTimeout(() => { statusEl.textContent = ''; }, 3000);
-
+        statusEl.textContent = '✅ Успешно! Информация передана в облако';
+        
         document.getElementById('venueName').value = '';
         document.getElementById('shawaName').value = '';
         document.getElementById('beerName').value = '';
         document.getElementById('venueComment').value = '';
+        
         loadReviews();
         btn.textContent = 'Сохранить оценку в облако';
+
+        setTimeout(() => { 
+          statusEl.textContent = ''; 
+        }, 4000);
       }
     });
 
