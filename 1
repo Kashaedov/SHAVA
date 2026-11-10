@@ -1,0 +1,1447 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Trophy, 
+  Beer, 
+  Flame, 
+  MapPin, 
+  Calendar, 
+  Star, 
+  User, 
+  PlusCircle, 
+  SlidersHorizontal, 
+  ArrowLeftRight, 
+  ThumbsDown, 
+  AlertTriangle, 
+  Eye, 
+  Lock, 
+  CheckCircle2, 
+  Sparkles, 
+  MessageSquare, 
+  Layers, 
+  Search, 
+  ChevronRight, 
+  RefreshCw, 
+  ShieldAlert,
+  Award,
+  DollarSign,
+  TrendingUp,
+  Filter,
+  Check,
+  Building,
+  Heart
+} from 'lucide-react';
+
+// --- НАЧАЛЬНЫЕ УЧАСТНИКИ КЛУБА ---
+const INITIAL_MEMBERS = [
+  { id: 'm1', name: 'Виталий «Острый Лаваш»', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', role: 'Основатель & Главный дегустатор', strictness: 7.2, favVenue: 'MyDearMeat / Маяковская' },
+  { id: 'm2', name: 'Алексей «Соусный Сомелье»', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', role: 'Пивной Эксперт', strictness: 8.5, favVenue: 'Döner King & Craft Bar' },
+  { id: 'm3', name: 'Дмитрий «Пенный Критик»', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', role: 'Эксперт по мясу и лавашу', strictness: 6.8, favVenue: 'Пивная «У Дяди Вано»' },
+  { id: 'm4', name: 'Павел «Хрустящий Укус»', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80', role: 'Критик атмосферы и сервиса', strictness: 7.9, favVenue: 'Бар «Гриль & Пена»' }
+];
+
+// --- НАЧАЛЬНЫЕ ЗАВЕДЕНИЯ ---
+const INITIAL_VENUES = [
+  {
+    id: 'v1',
+    name: 'MyDearMeat / Маяковская Шава',
+    city: 'Минск',
+    address: 'ул. Маяковского 154',
+    photo: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&auto=format&fit=crop&q=80',
+    visitCount: 4,
+    lastVisit: '2026-11-03',
+    priceAvgBYN: 14.50
+  },
+  {
+    id: 'v2',
+    name: 'Döner King & Craft Bar',
+    city: 'Минск',
+    address: 'просп. Независимости 23',
+    photo: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=800&auto=format&fit=crop&q=80',
+    visitCount: 6,
+    lastVisit: '2026-10-27',
+    priceAvgBYN: 16.00
+  },
+  {
+    id: 'v3',
+    name: 'Пивная и Шаурма «У Дяди Вано»',
+    city: 'Гродно',
+    address: 'ул. Советская 10',
+    photo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80',
+    visitCount: 2,
+    lastVisit: '2026-10-20',
+    priceAvgBYN: 12.00
+  },
+  {
+    id: 'v4',
+    name: 'Бар «Гриль & Пена»',
+    city: 'Минск',
+    address: 'ул. Зыбицкая 6',
+    photo: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&auto=format&fit=crop&q=80',
+    visitCount: 1,
+    lastVisit: '2026-10-13',
+    priceAvgBYN: 19.50
+  },
+  {
+    id: 'v5',
+    name: 'Лаваш Express',
+    city: 'Могилев',
+    address: 'ул. Ленинская 41',
+    photo: 'https://images.unsplash.com/photo-1529042410759-befb1204b468?w=800&auto=format&fit=crop&q=80',
+    visitCount: 3,
+    lastVisit: '2026-10-06',
+    priceAvgBYN: 9.90
+  }
+];
+
+// --- НАЧАЛЬНЫЕ ВТОРНИКИ (ПОСЕЩЕНИЯ) ---
+const INITIAL_VISITS = [
+  {
+    id: 'vis-101',
+    venueId: 'v1',
+    date: '2026-11-03',
+    title: 'Вторник #44: Эпическая сочность на Маяковской',
+    orderedShawarma: 'Шаурма «Классическая Царская» с чесночным соусом',
+    orderedBeer: 'Крафтовый IPA «Туманный Вторник»',
+    photos: [
+      'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=600&auto=format&fit=crop&q=80'
+    ],
+    reviews: [
+      {
+        memberId: 'm1',
+        comment: 'Мясо прожарено идеально, соус не течет через лаваш! Очень сбалансировано.',
+        scores: {
+          shawarma: { taste: 9, meat: 10, sauce: 9, lavash: 8, priceQuality: 9 },
+          beer: { taste: 8, aroma: 8, aftertaste: 7, temp: 9, priceQuality: 8 },
+          venue: { atmosphere: 8, cleanliness: 9, service: 8, comfort: 8, overall: 9 }
+        }
+      },
+      {
+        memberId: 'm2',
+        comment: 'Пиво подали идеальной температуры +5°C. Шаверма отличная, хотя лаваш мог быть чуть более хрустящим.',
+        scores: {
+          shawarma: { taste: 8, meat: 8, sauce: 9, lavash: 7, priceQuality: 8 },
+          beer: { taste: 9, aroma: 9, aftertaste: 9, temp: 10, priceQuality: 8 },
+          venue: { atmosphere: 8, cleanliness: 8, service: 9, comfort: 8, overall: 8 }
+        }
+      },
+      {
+        memberId: 'm3',
+        comment: 'Порция огромная! Чесночный соус легендарный. Обязательно повторим.',
+        scores: {
+          shawarma: { taste: 10, meat: 9, sauce: 10, lavash: 9, priceQuality: 10 },
+          beer: { taste: 8, aroma: 7, aftertaste: 8, temp: 8, priceQuality: 8 },
+          venue: { atmosphere: 7, cleanliness: 8, service: 8, comfort: 7, overall: 8 }
+        }
+      }
+    ]
+  },
+  {
+    id: 'vis-102',
+    venueId: 'v2',
+    date: '2026-10-27',
+    title: 'Вторник #43: Ревизия Döner King на Независимости',
+    orderedShawarma: 'Острая Дёнер-шаверма в техасском лаваше',
+    orderedBeer: 'Светлое фильтрованное Pilsner',
+    photos: [
+      'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600&auto=format&fit=crop&q=80'
+    ],
+    reviews: [
+      {
+        memberId: 'm1',
+        comment: 'Слишком много капусты и мало соуса. Пиво обычное, ничего выдающегося.',
+        scores: {
+          shawarma: { taste: 6, meat: 6, sauce: 5, lavash: 6, priceQuality: 5 },
+          beer: { taste: 6, aroma: 5, aftertaste: 6, temp: 7, priceQuality: 6 },
+          venue: { atmosphere: 7, cleanliness: 9, service: 7, comfort: 8, overall: 6 }
+        }
+      },
+      {
+        memberId: 'm2',
+        comment: 'Чистенько и быстро, но вкуса в шаверме не обнаружено. Суховато.',
+        scores: {
+          shawarma: { taste: 5, meat: 6, sauce: 4, lavash: 5, priceQuality: 5 },
+          beer: { taste: 6, aroma: 6, aftertaste: 5, temp: 8, priceQuality: 6 },
+          venue: { atmosphere: 8, cleanliness: 9, service: 8, comfort: 8, overall: 7 }
+        }
+      },
+      {
+        memberId: 'm4',
+        comment: 'Атмосфера хорошая, но кулинарная составляющая подкачала за 16 рублей.',
+        scores: {
+          shawarma: { taste: 6, meat: 5, sauce: 5, lavash: 6, priceQuality: 5 },
+          beer: { taste: 7, aroma: 6, aftertaste: 6, temp: 8, priceQuality: 7 },
+          venue: { atmosphere: 8, cleanliness: 9, service: 8, comfort: 8, overall: 7 }
+        }
+      }
+    ]
+  },
+  {
+    id: 'vis-103',
+    venueId: 'v3',
+    date: '2026-10-20',
+    title: 'Вторник #42: Выездная инспекция в Гродно',
+    orderedShawarma: 'Шаурма «Дядя Вано Специальная»',
+    orderedBeer: 'Местное «Гродненское Нефильтрованное»',
+    photos: [
+      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80'
+    ],
+    reviews: [
+      {
+        memberId: 'm1',
+        comment: 'Огненная подача! Соус — секретный семейный рецепт.',
+        scores: {
+          shawarma: { taste: 9, meat: 9, sauce: 10, lavash: 9, priceQuality: 9 },
+          beer: { taste: 9, aroma: 9, aftertaste: 8, temp: 9, priceQuality: 10 },
+          venue: { atmosphere: 9, cleanliness: 7, service: 9, comfort: 7, overall: 9 }
+        }
+      },
+      {
+        memberId: 'm3',
+        comment: 'Душевное место на пешеходке. Пиво немного теплеет быстро, но шаверма искупает все!',
+        scores: {
+          shawarma: { taste: 9, meat: 10, sauce: 9, lavash: 8, priceQuality: 10 },
+          beer: { taste: 7, aroma: 7, aftertaste: 7, temp: 6, priceQuality: 8 },
+          venue: { atmosphere: 9, cleanliness: 7, service: 9, comfort: 7, overall: 8 }
+        }
+      }
+    ]
+  }
+];
+
+// Функция расчёта среднего арифметического категории
+const calcCategoryAvg = (obj) => {
+  if (!obj) return 0;
+  const vals = Object.values(obj);
+  if (vals.length === 0) return 0;
+  return vals.reduce((a, b) => a + Number(b), 0) / vals.length;
+};
+
+export default function App() {
+  // Состояние с хранением в localStorage
+  const [venues, setVenues] = useState(() => {
+    const saved = localStorage.getItem('shava_venues_v2');
+    return saved ? JSON.parse(saved) : INITIAL_VENUES;
+  });
+
+  const [visits, setVisits] = useState(() => {
+    const saved = localStorage.getItem('shava_visits_v2');
+    return saved ? JSON.parse(saved) : INITIAL_VISITS;
+  });
+
+  const [members] = useState(INITIAL_MEMBERS);
+
+  // Состояние приложения
+  const [currentUser, setCurrentUser] = useState(INITIAL_MEMBERS[0]);
+  const [isPublicMode, setIsPublicMode] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard | tuesdays | comparison | profile
+
+  // Фильтры и категории для главная/рейтинги
+  const [rankingCategory, setRankingCategory] = useState('overall'); // overall | shawarma | beer | venue | anti | controversial | visited
+  const [filterCity, setFilterCity] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [minRatingsFilter, setMinRatingsFilter] = useState(1);
+
+  // Модальные окна
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedVenueForDetail, setSelectedVenueForDetail] = useState(null);
+  const [compareVenues, setCompareVenues] = useState({ v1: '', v2: '' });
+
+  // Синхронизация с localStorage
+  useEffect(() => {
+    localStorage.setItem('shava_venues_v2', JSON.stringify(venues));
+  }, [venues]);
+
+  useEffect(() => {
+    localStorage.setItem('shava_visits_v2', JSON.stringify(visits));
+  }, [visits]);
+
+  // Агрегация данных и расчета оценок по заведениям
+  const venueStats = useMemo(() => {
+    return venues.map(venue => {
+      const vVisits = visits.filter(v => v.venueId === venue.id);
+      let totalShawarma = 0;
+      let totalBeer = 0;
+      let totalVenue = 0;
+      let totalOverall = 0;
+      let reviewCount = 0;
+      let allScoresArray = [];
+
+      vVisits.forEach(vis => {
+        vis.reviews.forEach(rev => {
+          const sh = calcCategoryAvg(rev.scores.shawarma);
+          const be = calcCategoryAvg(rev.scores.beer);
+          const ve = calcCategoryAvg(rev.scores.venue);
+          const ov = (sh + be + ve) / 3;
+
+          totalShawarma += sh;
+          totalBeer += be;
+          totalVenue += ve;
+          totalOverall += ov;
+          reviewCount++;
+          allScoresArray.push(ov);
+        });
+      });
+
+      const avgShawarma = reviewCount ? totalShawarma / reviewCount : 0;
+      const avgBeer = reviewCount ? totalBeer / reviewCount : 0;
+      const avgVenue = reviewCount ? totalVenue / reviewCount : 0;
+      const avgOverall = reviewCount ? totalOverall / reviewCount : 0;
+
+      // Расчет среднеквадратичного отклонения для номинации "Спорное место"
+      let variance = 0;
+      if (reviewCount > 1) {
+        const sumSq = allScoresArray.reduce((acc, score) => acc + Math.pow(score - avgOverall, 2), 0);
+        variance = Math.sqrt(sumSq / reviewCount);
+      }
+
+      return {
+        ...venue,
+        actualVisitsCount: vVisits.length,
+        reviewCount,
+        avgShawarma: Number(avgShawarma.toFixed(1)),
+        avgBeer: Number(avgBeer.toFixed(1)),
+        avgVenue: Number(avgVenue.toFixed(1)),
+        avgOverall: Number(avgOverall.toFixed(1)),
+        variance: Number(variance.toFixed(2)),
+        latestVisitDate: vVisits.length ? vVisits[0].date : venue.lastVisit
+      };
+    });
+  }, [venues, visits]);
+
+  // Список уникальных городов
+  const cities = useMemo(() => {
+    const set = new Set(venues.map(v => v.city));
+    return ['All', ...Array.from(set)];
+  }, [venues]);
+
+  // Фильтрация и сортировка заведений для рейтингов
+  const sortedVenues = useMemo(() => {
+    let result = venueStats.filter(v => {
+      const matchCity = filterCity === 'All' || v.city === filterCity;
+      const matchSearch = v.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          v.address.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchMinRatings = v.reviewCount >= minRatingsFilter;
+      return matchCity && matchSearch && matchMinRatings;
+    });
+
+    switch (rankingCategory) {
+      case 'shawarma':
+        return result.sort((a, b) => b.avgShawarma - a.avgShawarma);
+      case 'beer':
+        return result.sort((a, b) => b.avgBeer - a.avgBeer);
+      case 'venue':
+        return result.sort((a, b) => b.avgVenue - a.avgVenue);
+      case 'anti':
+        return result.sort((a, b) => a.avgOverall - b.avgOverall);
+      case 'controversial':
+        return result.sort((a, b) => b.variance - a.variance);
+      case 'visited':
+        return result.sort((a, b) => b.actualVisitsCount - a.actualVisitsCount);
+      case 'overall':
+      default:
+        return result.sort((a, b) => b.avgOverall - a.avgOverall);
+    }
+  }, [venueStats, rankingCategory, filterCity, searchQuery, minRatingsFilter]);
+
+  // Номинации «Шава Вторника» и «Пиво Вторника»
+  const shawarmaOfWeek = useMemo(() => {
+    return [...venueStats].sort((a, b) => b.avgShawarma - a.avgShawarma)[0];
+  }, [venueStats]);
+
+  const beerOfWeek = useMemo(() => {
+    return [...venueStats].sort((a, b) => b.avgBeer - a.avgBeer)[0];
+  }, [venueStats]);
+
+  // Общее количество оценок
+  const totalRatingsGiven = useMemo(() => {
+    return visits.reduce((acc, vis) => acc + vis.reviews.length, 0);
+  }, [visits]);
+
+  // Последний рейд
+  const latestVisit = useMemo(() => {
+    if (!visits.length) return null;
+    return [...visits].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+  }, [visits]);
+
+  // Форма добавления нового рейда / заведения
+  const [formData, setFormData] = useState({
+    venueMode: 'existing', // existing | new
+    existingVenueId: venues[0]?.id || '',
+    newVenueName: '',
+    newVenueCity: 'Минск',
+    newVenueAddress: '',
+    newVenuePhoto: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=800&auto=format&fit=crop&q=80',
+    date: new Date().toISOString().split('T')[0],
+    title: 'Очередной рейд вторника',
+    orderedShawarma: '',
+    orderedBeer: '',
+    priceBYN: '15.00',
+    photoUrl: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=600&auto=format&fit=crop&q=80',
+    comment: '',
+    scores: {
+      shawarma: { taste: 8, meat: 8, sauce: 8, lavash: 8, priceQuality: 8 },
+      beer: { taste: 8, aroma: 8, aftertaste: 8, temp: 8, priceQuality: 8 },
+      venue: { atmosphere: 8, cleanliness: 8, service: 8, comfort: 8, overall: 8 }
+    }
+  });
+
+  const handleCreateVisit = (e) => {
+    e.preventDefault();
+    if (isPublicMode) return;
+
+    let targetVenueId = formData.existingVenueId;
+
+    if (formData.venueMode === 'new') {
+      const newV = {
+        id: 'v-' + Date.now(),
+        name: formData.newVenueName || 'Новое заведение',
+        city: formData.newVenueCity,
+        address: formData.newVenueAddress || 'Центральный район',
+        photo: formData.newVenuePhoto,
+        visitCount: 1,
+        lastVisit: formData.date,
+        priceAvgBYN: parseFloat(formData.priceBYN) || 15.00
+      };
+      setVenues(prev => [newV, ...prev]);
+      targetVenueId = newV.id;
+    }
+
+    const newVisitObj = {
+      id: 'vis-' + Date.now(),
+      venueId: targetVenueId,
+      date: formData.date,
+      title: formData.title,
+      orderedShawarma: formData.orderedShawarma || 'Шаурма фирменная',
+      orderedBeer: formData.orderedBeer || 'Пиво крафтовое',
+      photos: [formData.photoUrl],
+      reviews: [
+        {
+          memberId: currentUser.id,
+          comment: formData.comment || 'Оценка выставлена во время вторничного рейда.',
+          scores: formData.scores
+        }
+      ]
+    };
+
+    setVisits(prev => [newVisitObj, ...prev]);
+    setIsAddModalOpen(false);
+  };
+
+  const handleScoreChange = (cat, field, val) => {
+    setFormData(prev => ({
+      ...prev,
+      scores: {
+        ...prev.scores,
+        [cat]: {
+          ...prev.scores[cat],
+          [field]: Number(val)
+        }
+      }
+    }));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0F291E] text-[#FDFBF7] font-sans flex flex-col selection:bg-[#F97316] selection:text-white">
+      
+      {/* --- ШАПКА / HEADER --- */}
+      <header className="border-b border-[#1A4332] bg-[#0A1D15] sticky top-0 z-40 shadow-xl backdrop-blur-md bg-opacity-95">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+          
+          {/* Логотип */}
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F97316] to-[#FB923C] flex items-center justify-center shadow-lg shadow-[#F97316]/30 transform -rotate-3">
+              <Flame className="w-6 h-6 text-white animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-black tracking-wider text-white font-mono uppercase">
+                  ШАВА<span className="text-[#F97316]">ЛИГА</span>
+                </h1>
+                <span className="text-[10px] bg-[#F97316]/20 text-[#F97316] border border-[#F97316]/40 px-2 py-0.5 rounded font-bold uppercase tracking-widest">
+                  CLUB
+                </span>
+              </div>
+              <p className="text-xs text-[#FDFBF7]/60 italic">«Каждый вторник — новая проверка»</p>
+            </div>
+          </div>
+
+          {/* Навигация */}
+          <nav className="flex items-center gap-1 sm:gap-2 bg-[#143D2B]/80 p-1.5 rounded-2xl border border-[#1A4332] text-xs sm:text-sm font-medium overflow-x-auto max-w-full">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'dashboard' ? 'bg-[#F97316] text-white shadow-md font-bold' : 'text-[#FDFBF7]/80 hover:text-white hover:bg-[#1A4332]'
+              }`}
+            >
+              <Trophy className="w-4 h-4" /> Главная & Рейтинги
+            </button>
+            <button
+              onClick={() => setActiveTab('tuesdays')}
+              className={`px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'tuesdays' ? 'bg-[#F97316] text-white shadow-md font-bold' : 'text-[#FDFBF7]/80 hover:text-white hover:bg-[#1A4332]'
+              }`}
+            >
+              <Calendar className="w-4 h-4" /> Наши Вторники
+            </button>
+            <button
+              onClick={() => setActiveTab('comparison')}
+              className={`px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'comparison' ? 'bg-[#F97316] text-white shadow-md font-bold' : 'text-[#FDFBF7]/80 hover:text-white hover:bg-[#1A4332]'
+              }`}
+            >
+              <ArrowLeftRight className="w-4 h-4" /> Сравнение
+            </button>
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'profile' ? 'bg-[#F97316] text-white shadow-md font-bold' : 'text-[#FDFBF7]/80 hover:text-white hover:bg-[#1A4332]'
+              }`}
+            >
+              <User className="w-4 h-4" /> Кабинет
+            </button>
+          </nav>
+
+          {/* Панель пользователя и Режим доступа */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsPublicMode(!isPublicMode)}
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition font-medium ${
+                isPublicMode 
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' 
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+              }`}
+              title="Переключить режим видимости"
+            >
+              {isPublicMode ? <Eye className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              <span>{isPublicMode ? 'Публичный режим' : 'Закрытый Клуб'}</span>
+            </button>
+
+            {/* Выбор текущего участника */}
+            <div className="flex items-center gap-2 bg-[#143D2B] px-3 py-1 rounded-full border border-[#1A4332]">
+              <img 
+                src={currentUser.avatar} 
+                alt={currentUser.name} 
+                className="w-7 h-7 rounded-full object-cover border border-[#F97316]"
+              />
+              <select
+                value={currentUser.id}
+                onChange={(e) => {
+                  const m = members.find(x => x.id === e.target.value);
+                  if (m) setCurrentUser(m);
+                }}
+                className="bg-transparent text-xs text-[#FDFBF7] font-bold outline-none cursor-pointer pr-1"
+              >
+                {members.map(m => (
+                  <option key={m.id} value={m.id} className="bg-[#0F291E] text-white">
+                    {m.name.split(' ')[0]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+        </div>
+      </header>
+
+      {/* --- БАР СТАТИСТИКИ КЛУБА --- */}
+      <section className="bg-gradient-to-r from-[#143D2B] via-[#0F291E] to-[#143D2B] border-b border-[#1A4332] text-xs py-2.5 px-4">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4 text-center">
+          <div className="flex items-center gap-2">
+            <Building className="w-4 h-4 text-[#F97316]" />
+            <span className="text-[#FDFBF7]/60">Посещено заведений:</span>
+            <span className="font-bold text-[#F97316] text-sm">{venues.length}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-amber-400" />
+            <span className="text-[#FDFBF7]/60">Всего рейдов по вторникам:</span>
+            <span className="font-bold text-amber-400 text-sm">{visits.length}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span className="text-[#FDFBF7]/60">Выставлено оценок:</span>
+            <span className="font-bold text-emerald-400 text-sm">{totalRatingsGiven}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-cyan-400" />
+            <span className="text-[#FDFBF7]/60">Экспертов клуба:</span>
+            <span className="font-bold text-white text-sm">{members.length} человека</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[#FDFBF7]/60">Валюта:</span>
+            <span className="font-bold text-[#FDFBF7] bg-[#0A1D15] px-2 py-0.5 rounded border border-[#1A4332]">BYN</span>
+          </div>
+        </div>
+      </section>
+
+      {/* --- ОСНОВНОЙ КОНТЕНТ ПРИЛОЖЕНИЯ --- */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* КНОПКА ДОБАВЛЕНИЯ И ЗАГОЛОВОК */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+              Клубный Главный Рейтинг
+              {!isPublicMode && (
+                <span className="text-xs font-semibold bg-[#F97316]/20 text-[#F97316] px-2.5 py-1 rounded-full border border-[#F97316]/40">
+                  Закрытый доступ
+                </span>
+              )}
+            </h2>
+            <p className="text-sm text-[#FDFBF7]/70 mt-1">
+              Честные независимые оценки шавермы, пива и заведений от компании друзей.
+            </p>
+          </div>
+
+          <div>
+            {!isPublicMode ? (
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="w-full sm:w-auto bg-gradient-to-r from-[#F97316] to-[#FB923C] hover:from-[#e06205] hover:to-[#ea822b] text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-[#F97316]/25 flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer"
+              >
+                <PlusCircle className="w-5 h-5" />
+                Оценить новое заведение / Вторник
+              </button>
+            ) : (
+              <div className="text-xs bg-[#143D2B] text-[#FDFBF7]/70 px-4 py-2.5 rounded-xl border border-[#1A4332] flex items-center gap-2">
+                <Lock className="w-4 h-4 text-amber-400" />
+                В публичном режиме добавление оценок заблокировано
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* --- РАЗДЕЛ 1: ГЛАВНАЯ СТРАНИЦА И РЕЙТИНГИ --- */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-8">
+            
+            {/* БЛОК ПОСЛЕДНЕГО ПОСЕЩЕНИЯ И НОМИНАЦИЙ */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Карточка последнего посещения */}
+              {latestVisit && (
+                <div className="lg:col-span-1 bg-gradient-to-br from-[#143D2B] to-[#0A1D15] p-5 rounded-2xl border border-[#F97316]/40 relative overflow-hidden shadow-xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-[#F97316] font-extrabold uppercase tracking-widest mb-3">
+                      <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Последний Рейд</span>
+                      <span className="bg-[#F97316]/20 px-2 py-0.5 rounded text-[10px]">{latestVisit.date}</span>
+                    </div>
+                    
+                    <h3 className="text-xl font-black text-white">{latestVisit.title}</h3>
+                    
+                    {(() => {
+                      const v = venues.find(x => x.id === latestVisit.venueId);
+                      return v ? (
+                        <p className="text-xs text-[#FDFBF7]/70 flex items-center gap-1 mt-1">
+                          <MapPin className="w-3.5 h-3.5 text-[#F97316]" /> {v.name} ({v.city})
+                        </p>
+                      ) : null;
+                    })()}
+
+                    <div className="mt-4 bg-[#0F291E]/90 p-3 rounded-xl border border-[#1A4332] space-y-1.5 text-xs">
+                      <div className="text-[#FDFBF7]/80">🌯 <strong>Шава:</strong> {latestVisit.orderedShawarma}</div>
+                      <div className="text-[#FDFBF7]/80">🍺 <strong>Пиво:</strong> {latestVisit.orderedBeer}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-[#1A4332] flex items-center justify-between text-xs">
+                    <span className="text-[#FDFBF7]/60">Оценок участников: {latestVisit.reviews.length}</span>
+                    <button
+                      onClick={() => setActiveTab('tuesdays')}
+                      className="text-[#F97316] font-bold hover:underline flex items-center gap-1"
+                    >
+                      Смотреть рейд <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Номинация: Шава вторника */}
+              {shawarmaOfWeek && (
+                <div className="bg-gradient-to-br from-[#143D2B] to-[#0A1D15] p-5 rounded-2xl border border-[#F97316]/30 relative overflow-hidden shadow-xl flex flex-col justify-between">
+                  <div className="absolute -right-4 -bottom-4 opacity-10">
+                    <Flame className="w-36 h-36 text-[#F97316]" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#F97316] mb-3">
+                      <Award className="w-4 h-4" /> Номинация: «Шава Вторника»
+                    </div>
+                    <h3 className="text-xl font-black text-white">{shawarmaOfWeek.name}</h3>
+                    <p className="text-xs text-[#FDFBF7]/70 flex items-center gap-1 mt-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#F97316]" /> {shawarmaOfWeek.city}, {shawarmaOfWeek.address}
+                    </p>
+                  </div>
+                  <div className="flex items-end justify-between mt-4">
+                    <div>
+                      <div className="text-xs text-[#FDFBF7]/60">Средний чек</div>
+                      <div className="text-sm font-bold text-white">{shawarmaOfWeek.priceAvgBYN} BYN</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-black text-[#F97316]">{shawarmaOfWeek.avgShawarma}</div>
+                      <div className="text-[10px] text-[#FDFBF7]/50 uppercase">балл шавермы</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Номинация: Пиво вторника */}
+              {beerOfWeek && (
+                <div className="bg-gradient-to-br from-[#143D2B] to-[#0A1D15] p-5 rounded-2xl border border-amber-500/30 relative overflow-hidden shadow-xl flex flex-col justify-between">
+                  <div className="absolute -right-4 -bottom-4 opacity-10">
+                    <Beer className="w-36 h-36 text-amber-500" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-amber-400 mb-3">
+                      <Sparkles className="w-4 h-4" /> Номинация: «Пиво Вторника»
+                    </div>
+                    <h3 className="text-xl font-black text-white">{beerOfWeek.name}</h3>
+                    <p className="text-xs text-[#FDFBF7]/70 flex items-center gap-1 mt-1">
+                      <MapPin className="w-3.5 h-3.5 text-amber-400" /> {beerOfWeek.city}, {beerOfWeek.address}
+                    </p>
+                  </div>
+                  <div className="flex items-end justify-between mt-4">
+                    <div>
+                      <div className="text-xs text-[#FDFBF7]/60">Посещений</div>
+                      <div className="text-sm font-bold text-white">{beerOfWeek.actualVisitsCount} раз(а)</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-black text-amber-400">{beerOfWeek.avgBeer}</div>
+                      <div className="text-[10px] text-[#FDFBF7]/50 uppercase">балл пива</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* ТАБЫ И ФИЛЬТРЫ РЕЙТИНГА */}
+            <div className="bg-[#143D2B]/90 p-4 rounded-2xl border border-[#1A4332] flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-lg">
+              
+              {/* Вкладки переключения видов рейтинга */}
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: 'overall', label: '🏆 Общий Рейтинг' },
+                  { id: 'shawarma', label: '🌯 Шаверма' },
+                  { id: 'beer', label: '🍺 Пиво' },
+                  { id: 'venue', label: '🏛️ Атмосфера' },
+                  { id: 'anti', label: '💩 Антирейтинг' },
+                  { id: 'controversial', label: '⚡ Спорные' },
+                  { id: 'visited', label: '🔥 Посещаемые' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setRankingCategory(tab.id)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      rankingCategory === tab.id
+                        ? 'bg-[#F97316] text-white shadow-md'
+                        : 'bg-[#0F291E] text-[#FDFBF7]/70 hover:text-white hover:bg-[#0A1D15]'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Фильтрация по поиску, городам и кол-ву оценок */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative flex-1 sm:w-44">
+                  <Search className="w-3.5 h-3.5 text-[#FDFBF7]/40 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Поиск..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-[#0F291E] text-xs text-white pl-8 pr-3 py-2 rounded-xl border border-[#1A4332] focus:outline-none focus:border-[#F97316]"
+                  />
+                </div>
+
+                <select
+                  value={filterCity}
+                  onChange={(e) => setFilterCity(e.target.value)}
+                  className="bg-[#0F291E] text-xs text-white px-3 py-2 rounded-xl border border-[#1A4332] focus:outline-none focus:border-[#F97316]"
+                >
+                  {cities.map(c => (
+                    <option key={c} value={c}>
+                      {c === 'All' ? 'Все города' : c}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={minRatingsFilter}
+                  onChange={(e) => setMinRatingsFilter(Number(e.target.value))}
+                  className="bg-[#0F291E] text-xs text-white px-3 py-2 rounded-xl border border-[#1A4332] focus:outline-none focus:border-[#F97316]"
+                  title="Минимум оценок"
+                >
+                  <option value={1}>От 1 оценки</option>
+                  <option value={2}>От 2 оценок</option>
+                  <option value={3}>От 3 оценок</option>
+                </select>
+              </div>
+
+            </div>
+
+            {/* СПИСОК КАРТОЧЕК ЗАВЕДЕНИЙ */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedVenues.map((venue, idx) => (
+                <div
+                  key={venue.id}
+                  className="bg-[#143D2B]/60 rounded-2xl overflow-hidden border border-[#1A4332] hover:border-[#F97316]/60 transition-all duration-300 shadow-lg flex flex-col group"
+                >
+                  {/* Изображение заведения */}
+                  <div className="relative h-48 overflow-hidden bg-black/40">
+                    <img 
+                      src={venue.photo} 
+                      alt={venue.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 bg-[#0A1D15]/90 backdrop-blur-md px-3 py-1 rounded-full border border-[#F97316]/40 flex items-center gap-1.5 shadow-md">
+                      <span className="text-xs font-black text-[#F97316]">#{idx + 1}</span>
+                      <span className="text-[10px] text-[#FDFBF7]/80 font-medium">в рейтинге</span>
+                    </div>
+
+                    <div className="absolute top-3 right-3 bg-[#0A1D15]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-amber-500/40 text-center shadow-md">
+                      <div className="text-xl font-black text-amber-400 leading-none">{venue.avgOverall}</div>
+                      <div className="text-[9px] text-[#FDFBF7]/60 uppercase tracking-tighter">общий балл</div>
+                    </div>
+
+                    <div className="absolute bottom-3 left-3 bg-[#0A1D15]/80 text-[#FDFBF7] text-xs px-2.5 py-1 rounded-lg backdrop-blur-sm flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#F97316]" /> {venue.city}
+                    </div>
+                  </div>
+
+                  {/* Тело карточки */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-white group-hover:text-[#F97316] transition-colors">
+                        {venue.name}
+                      </h3>
+                      <p className="text-xs text-[#FDFBF7]/60 mt-1">{venue.address}</p>
+
+                      {/* Баллы по категориям */}
+                      <div className="grid grid-cols-3 gap-2 my-4 text-center">
+                        <div className="bg-[#0F291E] p-2 rounded-xl border border-[#1A4332]">
+                          <div className="text-[11px] text-[#FDFBF7]/60 flex items-center justify-center gap-1">
+                            <Flame className="w-3 h-3 text-[#F97316]" /> Шава
+                          </div>
+                          <div className="text-sm font-bold text-white mt-0.5">{venue.avgShawarma}</div>
+                        </div>
+
+                        <div className="bg-[#0F291E] p-2 rounded-xl border border-[#1A4332]">
+                          <div className="text-[11px] text-[#FDFBF7]/60 flex items-center justify-center gap-1">
+                            <Beer className="w-3 h-3 text-amber-400" /> Пиво
+                          </div>
+                          <div className="text-sm font-bold text-white mt-0.5">{venue.avgBeer}</div>
+                        </div>
+
+                        <div className="bg-[#0F291E] p-2 rounded-xl border border-[#1A4332]">
+                          <div className="text-[11px] text-[#FDFBF7]/60 flex items-center justify-center gap-1">
+                            <Trophy className="w-3 h-3 text-emerald-400" /> Вайб
+                          </div>
+                          <div className="text-sm font-bold text-white mt-0.5">{venue.avgVenue}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Подвал карточки */}
+                    <div className="pt-3 border-t border-[#1A4332] flex items-center justify-between text-xs text-[#FDFBF7]/60">
+                      <div>
+                        Рейдов: <span className="text-white font-bold">{venue.actualVisitsCount}</span> ({venue.reviewCount} оценок)
+                      </div>
+                      <button
+                        onClick={() => setSelectedVenueForDetail(venue)}
+                        className="text-[#F97316] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        Подробнее <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* --- РАЗДЕЛ 2: НАШИ ВТОРНИКИ (ХРОНОЛОГИЯ) --- */}
+        {activeTab === 'tuesdays' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-black text-white">Хроника Рейдов «Наши Вторники»</h3>
+              <span className="text-xs text-[#FDFBF7]/60 bg-[#143D2B] px-3 py-1.5 rounded-xl border border-[#1A4332]">
+                Сохранено вылазок: {visits.length}
+              </span>
+            </div>
+
+            <div className="space-y-6">
+              {visits.map(visit => {
+                const targetVenue = venues.find(v => v.id === visit.venueId);
+
+                let sum = 0;
+                let c = 0;
+                visit.reviews.forEach(r => {
+                  sum += (calcCategoryAvg(r.scores.shawarma) + calcCategoryAvg(r.scores.beer) + calcCategoryAvg(r.scores.venue)) / 3;
+                  c++;
+                });
+                const visitAvg = c ? (sum / c).toFixed(1) : 'N/A';
+
+                return (
+                  <div key={visit.id} className="bg-[#143D2B]/60 rounded-2xl border border-[#1A4332] overflow-hidden shadow-xl p-6">
+                    {/* Заголовок визита */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#1A4332]">
+                      <div>
+                        <div className="flex items-center gap-2 text-xs text-[#F97316] font-bold">
+                          <Calendar className="w-4 h-4" /> {visit.date}
+                        </div>
+                        <h4 className="text-xl font-bold text-white mt-1">{visit.title}</h4>
+                        <p className="text-xs text-[#FDFBF7]/70 mt-0.5">
+                          Заведение: <span className="font-semibold text-emerald-400">{targetVenue?.name || 'Заведение'}</span> ({targetVenue?.city})
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="bg-[#0F291E] px-4 py-2 rounded-xl border border-[#F97316]/40 text-center">
+                          <div className="text-xl font-black text-[#F97316]">{visitAvg}</div>
+                          <div className="text-[9px] text-[#FDFBF7]/60 uppercase">средний балл рейда</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Что заказывали */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4 bg-[#0F291E] p-4 rounded-xl text-xs border border-[#1A4332]">
+                      <div>
+                        <span className="text-[#F97316] font-bold block mb-1">🌯 Заказ Шавермы:</span>
+                        <span className="text-white">{visit.orderedShawarma}</span>
+                      </div>
+                      <div>
+                        <span className="text-amber-400 font-bold block mb-1">🍺 Заказ Пива:</span>
+                        <span className="text-white">{visit.orderedBeer}</span>
+                      </div>
+                    </div>
+
+                    {/* Отдельные отзывы участников */}
+                    <div className="space-y-4">
+                      <h5 className="text-xs font-bold uppercase tracking-wider text-[#FDFBF7]/50">
+                        Индивидуальные оценки участников ({visit.reviews.length}):
+                      </h5>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {visit.reviews.map((rev, rIdx) => {
+                          const member = members.find(m => m.id === rev.memberId);
+                          const shAvg = calcCategoryAvg(rev.scores.shawarma).toFixed(1);
+                          const beAvg = calcCategoryAvg(rev.scores.beer).toFixed(1);
+                          const veAvg = calcCategoryAvg(rev.scores.venue).toFixed(1);
+                          const total = ((Number(shAvg) + Number(beAvg) + Number(veAvg)) / 3).toFixed(1);
+
+                          return (
+                            <div key={rIdx} className="bg-[#0A1D15] p-4 rounded-xl border border-[#1A4332] flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <img 
+                                      src={member?.avatar} 
+                                      alt={member?.name} 
+                                      className="w-6 h-6 rounded-full object-cover border border-[#F97316]"
+                                    />
+                                    <span className="text-xs font-bold text-white">{member?.name}</span>
+                                  </div>
+                                  <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800 font-bold">
+                                    Итог: {total}
+                                  </span>
+                                </div>
+
+                                <p className="text-xs text-[#FDFBF7]/80 italic mb-3">«{rev.comment}»</p>
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-2 text-center text-[10px] pt-2 border-t border-[#1A4332]">
+                                <div><span className="text-[#FDFBF7]/50">Шава:</span> <strong className="text-white">{shAvg}</strong></div>
+                                <div><span className="text-[#FDFBF7]/50">Пиво:</span> <strong className="text-white">{beAvg}</strong></div>
+                                <div><span className="text-[#FDFBF7]/50">Заведение:</span> <strong className="text-white">{veAvg}</strong></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Галерея фото */}
+                    {visit.photos && visit.photos.length > 0 && (
+                      <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+                        {visit.photos.map((p, pIdx) => (
+                          <img 
+                            key={pIdx} 
+                            src={p} 
+                            alt="Фото с рейда" 
+                            className="w-24 h-24 rounded-xl object-cover border border-[#1A4332]"
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* --- РАЗДЕЛ 3: СРАВНЕНИЕ ЗАВЕДЕНИЙ --- */}
+        {activeTab === 'comparison' && (
+          <div className="space-y-6">
+            <h3 className="text-2xl font-black text-white">Сравнение заведений</h3>
+            <p className="text-xs text-[#FDFBF7]/70">
+              Сравните два заведения по ключевым показателям вкуса, качества пива, атмосферы и цены.
+            </p>
+
+            {/* Селекторы */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#143D2B] p-4 rounded-2xl border border-[#1A4332]">
+              <div>
+                <label className="text-xs text-[#FDFBF7]/70 block mb-1">Первое заведение:</label>
+                <select
+                  value={compareVenues.v1}
+                  onChange={(e) => setCompareVenues(prev => ({ ...prev, v1: e.target.value }))}
+                  className="w-full bg-[#0F291E] text-xs text-white p-2.5 rounded-xl border border-[#1A4332] focus:outline-none"
+                >
+                  <option value="">Выберите заведение 1...</option>
+                  {venueStats.map(v => (
+                    <option key={v.id} value={v.id}>{v.name} ({v.city})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-[#FDFBF7]/70 block mb-1">Второе заведение:</label>
+                <select
+                  value={compareVenues.v2}
+                  onChange={(e) => setCompareVenues(prev => ({ ...prev, v2: e.target.value }))}
+                  className="w-full bg-[#0F291E] text-xs text-white p-2.5 rounded-xl border border-[#1A4332] focus:outline-none"
+                >
+                  <option value="">Выберите заведение 2...</option>
+                  {venueStats.map(v => (
+                    <option key={v.id} value={v.id}>{v.name} ({v.city})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Сравнительная таблица */}
+            {compareVenues.v1 && compareVenues.v2 ? (
+              (() => {
+                const venueA = venueStats.find(v => v.id === compareVenues.v1);
+                const venueB = venueStats.find(v => v.id === compareVenues.v2);
+
+                if (!venueA || !venueB) return null;
+
+                const comparisonMetrics = [
+                  { label: 'Общий средний балл', keyA: venueA.avgOverall, keyB: venueB.avgOverall },
+                  { label: 'Оценка Шавермы', keyA: venueA.avgShawarma, keyB: venueB.avgShawarma },
+                  { label: 'Оценка Пива', keyA: venueA.avgBeer, keyB: venueB.avgBeer },
+                  { label: 'Оценка Заведения / Атмосферы', keyA: venueA.avgVenue, keyB: venueB.avgVenue },
+                  { label: 'Средний чек', keyA: `${venueA.priceAvgBYN} BYN`, keyB: `${venueB.priceAvgBYN} BYN` },
+                  { label: 'Количество рейдов', keyA: venueA.actualVisitsCount, keyB: venueB.actualVisitsCount }
+                ];
+
+                return (
+                  <div className="bg-[#143D2B]/60 rounded-2xl border border-[#1A4332] overflow-hidden p-6">
+                    <div className="grid grid-cols-3 text-center border-b border-[#1A4332] pb-4 font-bold text-sm">
+                      <div className="text-[#F97316]">{venueA.name}</div>
+                      <div className="text-[#FDFBF7]/40">Критерий</div>
+                      <div className="text-amber-400">{venueB.name}</div>
+                    </div>
+
+                    <div className="divide-y divide-[#1A4332]">
+                      {comparisonMetrics.map((m, idx) => (
+                        <div key={idx} className="grid grid-cols-3 text-center py-3.5 text-xs">
+                          <div className="font-bold text-white text-sm">{m.keyA}</div>
+                          <div className="text-[#FDFBF7]/60 flex items-center justify-center">{m.label}</div>
+                          <div className="font-bold text-white text-sm">{m.keyB}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              <div className="text-center py-12 bg-[#143D2B]/30 rounded-2xl border border-dashed border-[#1A4332] text-xs text-[#FDFBF7]/50">
+                Выберите два заведения выше для построения дуэли показателей.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* --- РАЗДЕЛ 4: ЛИЧНЫЙ КАБИНЕТ УЧАСТНИКА --- */}
+        {activeTab === 'profile' && (
+          <div className="space-y-6">
+            <div className="bg-[#143D2B]/80 p-6 rounded-2xl border border-[#1A4332] flex flex-col md:flex-row items-center gap-6">
+              <img 
+                src={currentUser.avatar} 
+                alt={currentUser.name} 
+                className="w-24 h-24 rounded-2xl object-cover border-2 border-[#F97316] shadow-xl"
+              />
+              <div className="text-center md:text-left flex-1">
+                <span className="text-xs font-bold text-[#F97316] uppercase tracking-widest bg-[#F97316]/10 px-2.5 py-1 rounded border border-[#F97316]/30">
+                  {currentUser.role}
+                </span>
+                <h3 className="text-2xl font-black text-white mt-2">{currentUser.name}</h3>
+                <p className="text-xs text-[#FDFBF7]/70 mt-1">Официальный инспектор и участник рейдов клуба «ШаваЛига»</p>
+              </div>
+
+              <div className="bg-[#0F291E] p-4 rounded-xl border border-[#1A4332] text-center min-w-[150px]">
+                <div className="text-2xl font-black text-amber-400">{currentUser.strictness} / 10</div>
+                <div className="text-[10px] text-[#FDFBF7]/60 uppercase mt-1">Строгость оценивания</div>
+              </div>
+            </div>
+
+            {/* Карточки личной статистики */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-[#143D2B]/40 p-5 rounded-2xl border border-[#1A4332]">
+                <div className="text-xs text-[#FDFBF7]/60 uppercase font-bold">Оценивал заведений</div>
+                <div className="text-3xl font-black text-white mt-2">
+                  {visits.filter(v => v.reviews.some(r => r.memberId === currentUser.id)).length}
+                </div>
+              </div>
+
+              <div className="bg-[#143D2B]/40 p-5 rounded-2xl border border-[#1A4332]">
+                <div className="text-xs text-[#FDFBF7]/60 uppercase font-bold flex items-center gap-1">
+                  <Heart className="w-3.5 h-3.5 text-[#F97316]" /> Любимое заведение
+                </div>
+                <div className="text-base font-bold text-[#F97316] mt-2">
+                  {currentUser.favVenue}
+                </div>
+              </div>
+
+              <div className="bg-[#143D2B]/40 p-5 rounded-2xl border border-[#1A4332]">
+                <div className="text-xs text-[#FDFBF7]/60 uppercase font-bold flex items-center gap-1">
+                  <Beer className="w-3.5 h-3.5 text-amber-400" /> Статус эксперта
+                </div>
+                <div className="text-base font-bold text-amber-400 mt-2">
+                  Активный вторничный рейдер
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </main>
+
+      {/* --- МОДАЛЬНОЕ ОКНО: ДЕТАЛИ ЗАВЕДЕНИЯ --- */}
+      {selectedVenueForDetail && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#0F291E] border border-[#1A4332] w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl relative my-8">
+            <button
+              onClick={() => setSelectedVenueForDetail(null)}
+              className="absolute top-4 right-4 bg-black/60 hover:bg-black text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold z-10 cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <div className="relative h-56">
+              <img src={selectedVenueForDetail.photo} alt={selectedVenueForDetail.name} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0F291E] via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-6">
+                <span className="text-xs bg-[#F97316] text-white font-bold px-2.5 py-1 rounded-md">
+                  {selectedVenueForDetail.city}
+                </span>
+                <h3 className="text-2xl font-black text-white mt-1">{selectedVenueForDetail.name}</h3>
+                <p className="text-xs text-[#FDFBF7]/70">{selectedVenueForDetail.address}</p>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Баллы */}
+              <div className="grid grid-cols-4 gap-3 text-center bg-[#143D2B] p-4 rounded-2xl border border-[#1A4332]">
+                <div>
+                  <div className="text-[10px] text-[#FDFBF7]/60 uppercase">Общий</div>
+                  <div className="text-lg font-black text-white">{selectedVenueForDetail.avgOverall}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-[#FDFBF7]/60 uppercase">Шава</div>
+                  <div className="text-lg font-black text-[#F97316]">{selectedVenueForDetail.avgShawarma}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-[#FDFBF7]/60 uppercase">Пиво</div>
+                  <div className="text-lg font-black text-amber-400">{selectedVenueForDetail.avgBeer}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-[#FDFBF7]/60 uppercase">Вайб</div>
+                  <div className="text-lg font-black text-emerald-400">{selectedVenueForDetail.avgVenue}</div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center text-xs text-[#FDFBF7]/70 border-b border-[#1A4332] pb-4">
+                <span>Средний чек: <strong className="text-white">{selectedVenueForDetail.priceAvgBYN} BYN</strong></span>
+                <span>Количество рейдов: <strong className="text-white">{selectedVenueForDetail.actualVisitsCount}</strong></span>
+              </div>
+
+              <div className="text-center pt-2">
+                <button
+                  onClick={() => setSelectedVenueForDetail(null)}
+                  className="bg-[#143D2B] hover:bg-[#1A4332] text-white text-xs font-bold px-6 py-2.5 rounded-xl border border-[#1A4332] cursor-pointer"
+                >
+                  Закрыть окно
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- МОДАЛЬНОЕ ОКНО: ОЦЕНИТЬ ВТОРНИЧНЫЙ РЕЙД --- */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#0F291E] border border-[#1A4332] w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl relative my-8 max-h-[90vh] flex flex-col">
+            
+            {/* Шапка формы */}
+            <div className="p-6 border-b border-[#143D2B] flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black text-white flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-[#F97316]" /> Оценить вторничный рейд
+                </h3>
+                <p className="text-xs text-[#FDFBF7]/60">Выставляются оценки от лица: <strong>{currentUser.name}</strong></p>
+              </div>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-[#FDFBF7]/50 hover:text-white font-bold text-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Форма с прокруткой */}
+            <form onSubmit={handleCreateVisit} className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+              
+              {/* Раздел 1: Выбор или добавление заведения */}
+              <div className="space-y-3">
+                <label className="font-bold text-white uppercase tracking-wider text-[11px] block">1. Заведение</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="vMode" 
+                      checked={formData.venueMode === 'existing'} 
+                      onChange={() => setFormData(prev => ({ ...prev, venueMode: 'existing' }))}
+                    />
+                    <span>Существующее</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="vMode" 
+                      checked={formData.venueMode === 'new'} 
+                      onChange={() => setFormData(prev => ({ ...prev, venueMode: 'new' }))}
+                    />
+                    <span>Добавить новое</span>
+                  </label>
+                </div>
+
+                {formData.venueMode === 'existing' ? (
+                  <select
+                    value={formData.existingVenueId}
+                    onChange={(e) => setFormData(prev => ({ ...prev, existingVenueId: e.target.value }))}
+                    className="w-full bg-[#143D2B] text-white p-3 rounded-xl border border-[#1A4332]"
+                  >
+                    {venues.map(v => (
+                      <option key={v.id} value={v.id}>{v.name} ({v.city}, {v.address})</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <input 
+                      type="text" 
+                      placeholder="Название (напр. Шава&Craft)" 
+                      value={formData.newVenueName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, newVenueName: e.target.value }))}
+                      className="bg-[#143D2B] text-white p-3 rounded-xl border border-[#1A4332]"
+                      required
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Город (Минск, Гродно)" 
+                      value={formData.newVenueCity}
+                      onChange={(e) => setFormData(prev => ({ ...prev, newVenueCity: e.target.value }))}
+                      className="bg-[#143D2B] text-white p-3 rounded-xl border border-[#1A4332]"
+                      required
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Адрес" 
+                      value={formData.newVenueAddress}
+                      onChange={(e) => setFormData(prev => ({ ...prev, newVenueAddress: e.target.value }))}
+                      className="bg-[#143D2B] text-white p-3 rounded-xl border border-[#1A4332]"
+                      required
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Детали заказа */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[#FDFBF7]/70 block mb-1">Дата посещения</label>
+                  <input 
+                    type="date" 
+                    value={formData.date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                    className="w-full bg-[#143D2B] text-white p-2.5 rounded-xl border border-[#1A4332]"
+                  />
+                </div>
+                <div>
+                  <label className="text-[#FDFBF7]/70 block mb-1">Что брали из Шаурмы</label>
+                  <input 
+                    type="text" 
+                    placeholder="Например: Сырная с халапеньо" 
+                    value={formData.orderedShawarma}
+                    onChange={(e) => setFormData(prev => ({ ...prev, orderedShawarma: e.target.value }))}
+                    className="w-full bg-[#143D2B] text-white p-2.5 rounded-xl border border-[#1A4332]"
+                  />
+                </div>
+                <div>
+                  <label className="text-[#FDFBF7]/70 block mb-1">Что пили</label>
+                  <input 
+                    type="text" 
+                    placeholder="Например: IPA 0.5л" 
+                    value={formData.orderedBeer}
+                    onChange={(e) => setFormData(prev => ({ ...prev, orderedBeer: e.target.value }))}
+                    className="w-full bg-[#143D2B] text-white p-2.5 rounded-xl border border-[#1A4332]"
+                  />
+                </div>
+              </div>
+
+              {/* РАЗДОЛ 2: КРИТЕРИИ ШАВЕРМЫ */}
+              <div className="bg-[#143D2B]/50 p-4 rounded-2xl border border-[#1A4332] space-y-3">
+                <h4 className="font-bold text-[#F97316] uppercase flex items-center gap-1.5">
+                  <Flame className="w-4 h-4" /> 2. Критерии Шавермы (1 - 10)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { id: 'taste', label: 'Вкус и общее впечатление' },
+                    { id: 'meat', label: 'Качество мяса' },
+                    { id: 'sauce', label: 'Соус' },
+                    { id: 'lavash', label: 'Лаваш / Хруст' },
+                    { id: 'priceQuality', label: 'Цена / Качество' }
+                  ].map(item => (
+                    <div key={item.id}>
+                      <div className="flex justify-between text-[#FDFBF7]/80 mb-1">
+                        <span>{item.label}</span>
+                        <span className="font-bold text-white">{formData.scores.shawarma[item.id]}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={formData.scores.shawarma[item.id]}
+                        onChange={(e) => handleScoreChange('shawarma', item.id, e.target.value)}
+                        className="w-full accent-[#F97316]"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* РАЗДЕЛ 3: КРИТЕРИИ ПИВА */}
+              <div className="bg-[#143D2B]/50 p-4 rounded-2xl border border-[#1A4332] space-y-3">
+                <h4 className="font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                  <Beer className="w-4 h-4" /> 3. Критерии Пива (1 - 10)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { id: 'taste', label: 'Вкус' },
+                    { id: 'aroma', label: 'Аромат' },
+                    { id: 'aftertaste', label: 'Послевкусие' },
+                    { id: 'temp', label: 'Температура подачи' },
+                    { id: 'priceQuality', label: 'Соотношение цены' }
+                  ].map(item => (
+                    <div key={item.id}>
+                      <div className="flex justify-between text-[#FDFBF7]/80 mb-1">
+                        <span>{item.label}</span>
+                        <span className="font-bold text-white">{formData.scores.beer[item.id]}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={formData.scores.beer[item.id]}
+                        onChange={(e) => handleScoreChange('beer', item.id, e.target.value)}
+                        className="w-full accent-amber-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* РАЗДЕЛ 4: КРИТЕРИИ ЗАВЕДЕНИЯ */}
+              <div className="bg-[#143D2B]/50 p-4 rounded-2xl border border-[#1A4332] space-y-3">
+                <h4 className="font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+                  <Trophy className="w-4 h-4" /> 4. Атмосфера и сервис (1 - 10)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { id: 'atmosphere', label: 'Атмосфера' },
+                    { id: 'cleanliness', label: 'Чистота' },
+                    { id: 'service', label: 'Обслуживание' },
+                    { id: 'comfort', label: 'Комфорт' },
+                    { id: 'overall', label: 'Общий вайб' }
+                  ].map(item => (
+                    <div key={item.id}>
+                      <div className="flex justify-between text-[#FDFBF7]/80 mb-1">
+                        <span>{item.label}</span>
+                        <span className="font-bold text-white">{formData.scores.venue[item.id]}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={formData.scores.venue[item.id]}
+                        onChange={(e) => handleScoreChange('venue', item.id, e.target.value)}
+                        className="w-full accent-emerald-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Текстовый комментарий */}
+              <div>
+                <label className="text-[#FDFBF7]/70 block mb-1">Вердикт эксперта (комментарий)</label>
+                <textarea
+                  rows="3"
+                  placeholder="Опишите ваши впечатления от соусов, лаваша и атмосферы..."
+                  value={formData.comment}
+                  onChange={(e) => setFormData(prev => ({ ...prev, comment: e.target.value }))}
+                  className="w-full bg-[#143D2B] text-white p-3 rounded-xl border border-[#1A4332]"
+                />
+              </div>
+
+              {/* Отправка */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-[#F97316] to-[#FB923C] text-white py-3.5 rounded-xl font-bold text-sm shadow-xl shadow-[#F97316]/30 cursor-pointer"
+                >
+                  Опубликовать оценку рейда
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* --- ПОДВАЛ / FOOTER --- */}
+      <footer className="bg-[#0A1D15] border-t border-[#1A4332] py-6 text-center text-xs text-[#FDFBF7]/40">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div>
+            © 2026 <strong>ШАВАЛИГА</strong>. Независимый рейтинг шавермы и пива.
+          </div>
+          <div className="flex items-center gap-4">
+            <span>Валюта: BYN</span>
+            <span>Минск • Гродно • Могилев</span>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  );
+}
