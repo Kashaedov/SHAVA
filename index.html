@@ -28,21 +28,11 @@
       </div>
 
       <form id="shavaForm" class="space-y-4 text-xs">
-        <div>
-          <label class="block text-slate-400 mb-1 font-bold">Выбрать заведение</label>
-          <select id="venueSelect" onchange="handleVenueChange(this.value)" class="w-full bg-slate-950 border border-slate-800/80 p-3 rounded-xl text-sm text-amber-400 font-bold outline-none focus:border-amber-400/60">
-            <option value="Дейзи">📍 Дейзи</option>
-            <option value="Шаурма в Пивне (Максима Танка)">📍 Шаурма в Пивне (Максима Танка)</option>
-            <option value="custom">✏️ Другое заведение (вписать вручную)...</option>
-          </select>
-        </div>
-
-        <div id="customVenueContainer" class="hidden">
-          <label class="block text-slate-400 mb-1 font-bold">Название нового заведения</label>
-          <input type="text" id="customVenueName" placeholder="Введите название..." class="w-full bg-slate-950 border border-slate-800/80 p-3 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-amber-400/60" />
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1 font-bold">Название заведения</label>
+            <input type="text" id="venueName" placeholder="Дейзи или Шаурма в Пивне" class="w-full bg-slate-950 border border-slate-800/80 p-3 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-amber-400/60" required />
+          </div>
           <div>
             <label class="block text-slate-400 mb-1 font-bold">Участник</label>
             <select id="venueAuthor" class="w-full bg-slate-950 border border-slate-800/80 p-3 rounded-xl text-sm text-amber-400 font-black outline-none focus:border-amber-400/60">
@@ -50,10 +40,6 @@
               <option value="Дмитрий">Дмитрий</option>
               <option value="Ринат">Ринат</option>
             </select>
-          </div>
-          <div>
-            <label class="block text-slate-400 mb-1 font-bold">Адрес / Улица</label>
-            <input type="text" id="venueAddress" placeholder="Например: ул. М. Танка" class="w-full bg-slate-950 border border-slate-800/80 p-3 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-amber-400/60" />
           </div>
         </div>
 
@@ -129,16 +115,6 @@
     let allData = [];
     let activeFilter = 'all';
 
-    function handleVenueChange(val) {
-      const customContainer = document.getElementById('customVenueContainer');
-      if (val === 'custom') {
-        customContainer.classList.remove('hidden');
-        document.getElementById('customVenueName').focus();
-      } else {
-        customContainer.classList.add('hidden');
-      }
-    }
-
     function setFilter(author) {
       activeFilter = author;
       ['all', 'Виталий', 'Дмитрий', 'Ринат'].forEach(a => {
@@ -181,7 +157,7 @@
       }
 
       if (filtered.length === 0) {
-        listEl.innerHTML = `<div class="bg-slate-900/60 border border-emerald-900/40 p-8 rounded-3xl text-center text-xs text-slate-400">Оценок пока нет. Выберите заведение выше и добавьте первую оценку!</div>`;
+        listEl.innerHTML = `<div class="bg-slate-900/60 border border-emerald-900/40 p-8 rounded-3xl text-center text-xs text-slate-400">Оценок пока нет. Заполните форму выше и добавьте первую точку!</div>`;
         document.getElementById('totalVenuesCount').textContent = `Заведений: 0`;
         return;
       }
@@ -231,7 +207,6 @@
                 <span class="text-amber-400 font-extrabold">${r.author || 'Участник'}</span>
                 <span class="text-[10px] text-slate-500">${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</span>
               </div>
-              ${r.address ? `<div class="text-[10px] text-slate-400">📍 ${r.address}</div>` : ''}
               
               <div class="grid grid-cols-2 gap-2 pt-1 text-[11px] font-semibold">
                 <div class="bg-emerald-950/40 p-1.5 rounded-xl border border-emerald-900/40">🌯 ${r.city || 'Шаурма'}: <b class="text-emerald-400 font-bold">${r.shawa_taste ?? '-'}</b></div>
@@ -279,10 +254,8 @@
       btn.textContent = 'Сохранение...';
       statusEl.textContent = '';
 
-      const selectVal = document.getElementById('venueSelect').value;
-      const name = selectVal === 'custom' ? document.getElementById('customVenueName').value : selectVal;
+      const name = document.getElementById('venueName').value;
       const author = document.getElementById('venueAuthor').value;
-      const address = document.getElementById('venueAddress').value;
       
       const shawaName = document.getElementById('shawaName').value;
       const shawaScore = document.getElementById('shawaScore').value;
@@ -301,7 +274,6 @@
       const { error } = await supabase.from('reviews').insert([{
         venue_name: name,
         author: author,
-        address: address,
         city: shawaName || 'Классика', 
         shawa_taste: shawaScore ? Number(shawaScore) : null,
         beer_taste: beerScore ? Number(beerScore) : null,
@@ -317,12 +289,10 @@
         statusEl.textContent = 'Успешно сохранено!';
         setTimeout(() => { statusEl.textContent = ''; }, 3000);
 
+        document.getElementById('venueName').value = '';
         document.getElementById('shawaName').value = '';
         document.getElementById('beerName').value = '';
         document.getElementById('venueComment').value = '';
-        if(selectVal === 'custom') {
-          document.getElementById('customVenueName').value = '';
-        }
         loadReviews();
         btn.textContent = 'Сохранить оценку в облако';
       }
