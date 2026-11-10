@@ -72,7 +72,7 @@
           <input type="text" id="venueComment" placeholder="Соус, мяско, атмосфера..." class="w-full bg-slate-950 border border-slate-800/80 p-3 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-amber-400/60" />
         </div>
 
-        <div id="formStatus" class="text-center font-bold text-xs py-1"></div>
+        <div id="formStatus" class="text-center font-bold text-xs py-2 px-3 rounded-xl"></div>
 
         <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-3.5 rounded-xl text-sm transition transform active:scale-[0.99] shadow-lg shadow-amber-500/20">
           Сохранить оценку в облако
@@ -111,7 +111,6 @@
     const SUPABASE_URL = "https://wvfiqnfdqxdvrggexuqk.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_A5kX8Yq_KtoSJcwd4brj0g_8ipJxn_O";
     
-    // Используем уникальное имя переменной, чтобы избежать конфликтов
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let allData = [];
@@ -150,6 +149,17 @@
       } catch (err) {
         if (loadingEl) loadingEl.style.display = 'none';
         document.getElementById('venuesList').innerHTML = `<p class="text-xs text-red-400 text-center p-4 bg-slate-900 rounded-2xl">Сбой соединения: ${err.message}</p>`;
+      }
+    }
+
+    async function deleteReview(id) {
+      if (!confirm('Точно удалить эту оценку?')) return;
+      
+      const { error } = await dbClient.from('reviews').delete().eq('id', id);
+      if (error) {
+        alert('Ошибка удаления: ' + error.message);
+      } else {
+        loadReviews();
       }
     }
 
@@ -209,10 +219,13 @@
           const userComment = commentParts[1] ? commentParts[1].trim() : (r.comment || '');
 
           return `
-            <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80 text-xs space-y-1.5">
+            <div class="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80 text-xs space-y-1.5 relative group">
               <div class="flex justify-between items-center font-bold">
                 <span class="text-amber-400 font-extrabold">${r.author || 'Участник'}</span>
-                <span class="text-[10px] text-slate-500">${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] text-slate-500">${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</span>
+                  <button onclick="deleteReview(${r.id})" class="text-slate-600 hover:text-red-400 text-xs transition p-1" title="Удалить отзыв">🗑️</button>
+                </div>
               </div>
               
               <div class="grid grid-cols-2 gap-2 pt-1 text-[11px] font-semibold">
@@ -260,16 +273,14 @@
       const statusEl = document.getElementById('formStatus');
       btn.textContent = 'Сохранение...';
       statusEl.textContent = '';
+      statusEl.className = 'text-center font-bold text-xs py-2 px-3 rounded-xl';
 
       const name = document.getElementById('venueName').value;
       const author = document.getElementById('venueAuthor').value;
-      
       const shawaName = document.getElementById('shawaName').value;
       const shawaScore = document.getElementById('shawaScore').value;
-      
       const beerName = document.getElementById('beerName').value;
       const beerScore = document.getElementById('beerScore').value;
-      
       const comment = document.getElementById('venueComment').value;
 
       if (!name) {
@@ -289,12 +300,11 @@
         }]);
 
         if (error) {
-          status_el_class = "text-center font-bold text-xs text-red-400";
-          statusEl.className = status_el_class;
-          statusEl.textContent = 'Ошибка сохранения: ' + error.message;
+          statusEl.className = "text-center font-bold text-xs py-2 px-3 rounded-xl bg-red-950/80 text-red-400 border border-red-800";
+          statusEl.textContent = 'Ошибка Supabase: ' + error.message;
           btn.textContent = 'Сохранить оценку в облако';
         } else {
-          statusEl.className = "text-center font-bold text-xs text-emerald-400";
+          statusEl.className = "text-center font-bold text-xs py-2 px-3 rounded-xl bg-emerald-950/80 text-emerald-400 border border-emerald-800";
           statusEl.textContent = '✅ Успешно! Информация передана в облако';
           
           document.getElementById('venueName').value = '';
@@ -307,11 +317,12 @@
 
           setTimeout(() => { 
             statusEl.textContent = ''; 
+            statusEl.className = 'text-center font-bold text-xs py-2 px-3 rounded-xl';
           }, 4000);
         }
       } catch (err) {
-        statusEl.className = "text-center font-bold text-xs text-red-400";
-        statusEl.textContent = 'Ошибка выполнения: ' + err.message;
+        statusEl.className = "text-center font-bold text-xs py-2 px-3 rounded-xl bg-red-950/80 text-red-400 border border-red-800";
+        statusEl.textContent = 'Сбой кода: ' + err.message;
         btn.textContent = 'Сохранить оценку в облако';
       }
     });
