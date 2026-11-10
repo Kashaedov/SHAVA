@@ -106,11 +106,13 @@
 
   </div>
 
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = "https://wvfiqnfdqxdvrggexuqk.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_A5kX8Yq_KtoSJcwd4brj0g_8ipJxn_O";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Используем уникальное имя переменной, чтобы избежать конфликтов
+    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let allData = [];
     let activeFilter = 'all';
@@ -134,16 +136,21 @@
       const loadingEl = document.getElementById('loading');
       if (loadingEl) loadingEl.style.display = 'block';
 
-      const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
-      if (loadingEl) loadingEl.style.display = 'none';
+      try {
+        const { data, error } = await dbClient.from('reviews').select('*').order('created_at', { ascending: false });
+        if (loadingEl) loadingEl.style.display = 'none';
 
-      if (error) {
-        document.getElementById('venuesList').innerHTML = `<p class="text-xs text-red-400 text-center p-4 bg-slate-900 rounded-2xl">Ошибка загрузки: ${error.message}</p>`;
-        return;
+        if (error) {
+          document.getElementById('venuesList').innerHTML = `<p class="text-xs text-red-400 text-center p-4 bg-slate-900 rounded-2xl">Ошибка базы: ${error.message}</p>`;
+          return;
+        }
+
+        allData = data || [];
+        renderList();
+      } catch (err) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        document.getElementById('venuesList').innerHTML = `<p class="text-xs text-red-400 text-center p-4 bg-slate-900 rounded-2xl">Сбой соединения: ${err.message}</p>`;
       }
-
-      allData = data || [];
-      renderList();
     }
 
     function renderList() {
@@ -271,34 +278,41 @@
         return;
       }
 
-      const { error } = await supabase.from('reviews').insert([{
-        venue_name: name,
-        author: author,
-        city: shawaName || 'Классика', 
-        shawa_taste: shawaScore ? Number(shawaScore) : null,
-        beer_taste: beerScore ? Number(beerScore) : null,
-        comment: `${beerName || 'Разливное'} | ${comment || ''}`
-      }]);
+      try {
+        const { error } = await dbClient.from('reviews').insert([{
+          venue_name: name,
+          author: author,
+          city: shawaName || 'Классика', 
+          shawa_taste: shawaScore ? Number(shawaScore) : null,
+          beer_taste: beerScore ? Number(beerScore) : null,
+          comment: `${beerName || 'Разливное'} | ${comment || ''}`
+        }]);
 
-      if (error) {
+        if (error) {
+          status_el_class = "text-center font-bold text-xs text-red-400";
+          statusEl.className = status_el_class;
+          statusEl.textContent = 'Ошибка сохранения: ' + error.message;
+          btn.textContent = 'Сохранить оценку в облако';
+        } else {
+          statusEl.className = "text-center font-bold text-xs text-emerald-400";
+          statusEl.textContent = '✅ Успешно! Информация передана в облако';
+          
+          document.getElementById('venueName').value = '';
+          document.getElementById('shawaName').value = '';
+          document.getElementById('beerName').value = '';
+          document.getElementById('venueComment').value = '';
+          
+          loadReviews();
+          btn.textContent = 'Сохранить оценку в облако';
+
+          setTimeout(() => { 
+            statusEl.textContent = ''; 
+          }, 4000);
+        }
+      } catch (err) {
         statusEl.className = "text-center font-bold text-xs text-red-400";
-        statusEl.textContent = 'Ошибка сохранения: ' + error.message;
+        statusEl.textContent = 'Ошибка выполнения: ' + err.message;
         btn.textContent = 'Сохранить оценку в облако';
-      } else {
-        statusEl.className = "text-center font-bold text-xs text-emerald-400";
-        statusEl.textContent = '✅ Успешно! Информация передана в облако';
-        
-        document.getElementById('venueName').value = '';
-        document.getElementById('shawaName').value = '';
-        document.getElementById('beerName').value = '';
-        document.getElementById('venueComment').value = '';
-        
-        loadReviews();
-        btn.textContent = 'Сохранить оценку в облако';
-
-        setTimeout(() => { 
-          statusEl.textContent = ''; 
-        }, 4000);
       }
     });
 
